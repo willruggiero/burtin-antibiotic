@@ -5,14 +5,14 @@ import numpy as np
 import subprocess
 import sys
 
-# Ensure Altair is installed
+# ✅ Ensure Altair is installed
 try:
     import altair
 except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "altair"])
     import altair
 
-# Page setup
+# --- Page setup
 st.set_page_config(page_title="Antibiotic Effectiveness Chart", layout="centered")
 st.title("💊 Antibiotic Strength Against Bacteria")
 st.markdown("""
@@ -20,7 +20,7 @@ This chart explores how three antibiotics—**Penicillin**, **Streptomycin**, an
 Lower MIC (Minimum Inhibitory Concentration) values mean **stronger antibiotic performance**.
 """)
 
-# Dataset
+# --- Dataset
 data = [
     {"Bacteria":"Aerobacter aerogenes","Penicillin":870,"Streptomycin":1,"Neomycin":1.6},
     {"Bacteria":"Bacillus anthracis","Penicillin":0.001,"Streptomycin":0.01,"Neomycin":0.007},
@@ -42,30 +42,13 @@ data = [
 
 df = pd.DataFrame(data)
 df_long = df.melt(id_vars=["Bacteria"], var_name="Antibiotic", value_name="MIC")
+
+# --- Add log10 column for visualization
 df_long["log_MIC"] = np.log10(df_long["MIC"])
 
-# Define effectiveness zones in log10(MIC)
-zones = pd.DataFrame([
-    {"Effectiveness": "Strongly Effective", "xmin": -1, "xmax": 0, "color": "#d4f0d4"},  # light green
-    {"Effectiveness": "Merely Effective", "xmin": 0, "xmax": 2, "color": "#fff3b0"},    # light yellow
-    {"Effectiveness": "Ineffective", "xmin": 2, "xmax": 3, "color": "#f7c6c5"},          # light red
-])
-
-# Background rectangles for zones
-zone_bands = alt.Chart(zones).mark_rect(opacity=0.15).encode(
-    x=alt.X('xmin:Q', scale=alt.Scale(domain=[-1, 3]), axis=None),
-    x2='xmax:Q',
-    y=alt.Y('Bacteria:N', sort='-x'),
-    y2=alt.value(0),
-    color=alt.Color('color:N', scale=None, legend=None)
-).properties(
-    width=750,
-    height=500
-)
-
-# Bars chart without annotations
-bars = alt.Chart(df_long).mark_bar().encode(
-    x=alt.X('log_MIC:Q', scale=alt.Scale(domain=[-1, 3]), title="log10(MIC) - Lower is Stronger"),
+# --- Chart without annotations
+chart = alt.Chart(df_long).mark_bar().encode(
+    x=alt.X('log_MIC:Q', title="log10(MIC) - Lower is Stronger"),
     y=alt.Y('Bacteria:N', sort='-x', title="Bacterial Species"),
     color=alt.Color('Antibiotic:N', legend=alt.Legend(title="Antibiotic")),
     tooltip=["Bacteria", "Antibiotic", "MIC"]
@@ -75,17 +58,11 @@ bars = alt.Chart(df_long).mark_bar().encode(
     title="Antibiotic Effectiveness Across Bacterial Species"
 )
 
-chart = zone_bands + bars
-
 st.altair_chart(chart, use_container_width=True)
 
+# --- Final note
 st.markdown("""
 This chart reveals key insights:
 - **Penicillin** is ineffective against some bacteria like *Aerobacter aerogenes* (MIC = 870).
 - **Streptomycin** and **Neomycin** show stronger, broader effectiveness, especially against Gram-negative species.
-
-The colored background highlights zones of:
-- **Green:** Strongly effective (MIC < 1)
-- **Yellow:** Merely effective (1 ≤ MIC < 100)
-- **Red:** Ineffective (MIC ≥ 100)
 """)

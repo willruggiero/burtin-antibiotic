@@ -1,55 +1,13 @@
-import streamlit as st
-import pandas as pd
 import altair as alt
-import numpy as np
-import subprocess
-import sys
 
-# ✅ Ensure Altair is installed
-try:
-    import altair
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "altair"])
-    import altair
+# Filter highlight to only the lowest MIC per bacteria (strongest antibiotic)
+highlight_min = highlight.loc[highlight.groupby("Bacteria")["MIC"].idxmin()]
 
-# --- Page setup
-st.set_page_config(page_title="Antibiotic Effectiveness Chart", layout="centered")
-st.title("💊 Antibiotic Strength Against Bacteria")
-st.markdown("""
-This annotated chart explores how three antibiotics—**Penicillin**, **Streptomycin**, and **Neomycin**—perform against 16 bacterial species.  
-Lower MIC (Minimum Inhibitory Concentration) values mean **stronger antibiotic performance**.
-""")
+# Add a small vertical offset to text to avoid overlap if needed
+highlight_min = highlight_min.assign(
+    y_offset=lambda d: d["Bacteria"].apply(lambda b: {"Bacillus anthracis": -0.15, "Aerobacter aerogenes": 0.15}[b])
+)
 
-# --- Dataset
-data = [
-    {"Bacteria":"Aerobacter aerogenes","Penicillin":870,"Streptomycin":1,"Neomycin":1.6},
-    {"Bacteria":"Bacillus anthracis","Penicillin":0.001,"Streptomycin":0.01,"Neomycin":0.007},
-    {"Bacteria":"Brucella abortus","Penicillin":1,"Streptomycin":2,"Neomycin":0.02},
-    {"Bacteria":"Diplococcus pneumoniae","Penicillin":0.005,"Streptomycin":11,"Neomycin":10},
-    {"Bacteria":"Escherichia coli","Penicillin":100,"Streptomycin":0.4,"Neomycin":0.1},
-    {"Bacteria":"Klebsiella pneumoniae","Penicillin":850,"Streptomycin":1.2,"Neomycin":1},
-    {"Bacteria":"Mycobacterium tuberculosis","Penicillin":800,"Streptomycin":5,"Neomycin":2},
-    {"Bacteria":"Proteus vulgaris","Penicillin":3,"Streptomycin":0.1,"Neomycin":0.1},
-    {"Bacteria":"Pseudomonas aeruginosa","Penicillin":850,"Streptomycin":2,"Neomycin":0.4},
-    {"Bacteria":"Salmonella typhosa","Penicillin":1,"Streptomycin":0.4,"Neomycin":0.008},
-    {"Bacteria":"Salmonella schottmuelleri","Penicillin":10,"Streptomycin":0.8,"Neomycin":0.09},
-    {"Bacteria":"Staphylococcus albus","Penicillin":0.007,"Streptomycin":0.1,"Neomycin":0.001},
-    {"Bacteria":"Staphylococcus aureus","Penicillin":0.03,"Streptomycin":0.03,"Neomycin":0.001},
-    {"Bacteria":"Streptococcus fecalis","Penicillin":1,"Streptomycin":1,"Neomycin":0.1},
-    {"Bacteria":"Streptococcus hemolyticus","Penicillin":0.001,"Streptomycin":14,"Neomycin":10},
-    {"Bacteria":"Streptococcus viridans","Penicillin":0.005,"Streptomycin":10,"Neomycin":40}
-]
-
-df = pd.DataFrame(data)
-df_long = df.melt(id_vars=["Bacteria"], var_name="Antibiotic", value_name="MIC")
-
-# --- Add log10 column for visualization
-df_long["log_MIC"] = np.log10(df_long["MIC"])
-
-# --- Highlight two contrasting bacteria (strong vs weak response)
-highlight = df_long[df_long["Bacteria"].isin(["Bacillus anthracis", "Aerobacter aerogenes"])]
-
-# --- Chart
 base = alt.Chart(df_long).mark_bar().encode(
     x=alt.X('log_MIC:Q', title="log10(MIC) - Lower is Stronger"),
     y=alt.Y('Bacteria:N', sort='-x', title="Bacterial Species"),
@@ -61,27 +19,29 @@ base = alt.Chart(df_long).mark_bar().encode(
     title="Antibiotic Effectiveness Across Bacterial Species"
 )
 
-# --- Annotation layer
-text = alt.Chart(highlight).mark_text(
+text = alt.Chart(highlight_min).mark_text(
     align='left',
     baseline='middle',
-    dx=7,
-    fontSize=12
+    dx=10,  # shift text farther to the right
+    fontSize=12,
+    fontWeight='bold',
+    color='black'
 ).encode(
     x='log_MIC:Q',
-    y='Bacteria:N',
-    text='Antibiotic'
+    y=alt.Y('Bacteria:N', axis=None),
+    text='Antibiotic:N',
+    # Apply vertical offset for each bacteria label
+    yOffset='y_offset:Q'
 )
 
-rule = alt.Chart(highlight).mark_rule(color='red', strokeDash=[5, 5]).encode(
-    x='log_MIC:Q'
+rule = alt.Chart(highlight_min).mark_rule(
+    color='red',
+    strokeDash=[5, 5],
+    opacity=0.6,
+    size=1  # thinner line
+).encode(
+    x='log_MIC:Q',
+    y=alt.Y('Bacteria:N', axis=None)
 )
 
 st.altair_chart(base + text + rule, use_container_width=True)
-
-# --- Final note
-st.markdown("""
-This chart reveals key insights:
-- **Penicillin** is ineffective against some bacteria like *Aerobacter aerogenes* (MIC = 870).
-- **Streptomycin** and **Neomycin** show stronger, broader effectiveness, especially against Gram-negative species.
-""")

@@ -14,10 +14,9 @@ except ImportError:
 
 # --- Page setup
 st.set_page_config(page_title="Antibiotic Effectiveness Chart", layout="centered")
-st.title("💊 Antibiotic Strength Against Bacteria")
+st.title("Antibiotic Strength Against Bacteria")
 st.markdown("""
-This chart explores how three antibiotics—**Penicillin**, **Streptomycin**, and **Neomycin**—perform against 16 bacterial species.  
-Lower MIC (Minimum Inhibitory Concentration) values mean **stronger antibiotic performance**.
+
 """)
 
 # --- Dataset
@@ -62,7 +61,5 @@ st.altair_chart(chart, use_container_width=True)
 
 # --- Final note
 st.markdown("""
-This chart reveals key insights:
-- **Penicillin** is ineffective against some bacteria like *Aerobacter aerogenes* (MIC = 870).
-- **Streptomycin** and **Neomycin** show stronger, broader effectiveness, especially against Gram-negative species.
+
 """)

@@ -52,22 +52,8 @@ zones = pd.DataFrame([
 ])
 
 # Background rectangles for zones
-zone_bands = alt.Chart(zones).mark_rect(opacity=0.3).encode(
-    x=alt.X('xmin:Q', title="log10(MIC) - Lower is Stronger", scale=alt.Scale(domain=[-1, 3])),
-    x2='xmax:Q',
-    y=alt.Y('Bacteria:N', sort='-x', title="Bacterial Species"),
-    y2=alt.value(0),  # full height
-    color=alt.Color('Effectiveness:N', scale=None)  # use given colors
-).properties(width=750, height=500).transform_calculate(
-    # This dummy field forces y2 to bottom so rect spans full vertical height
-    y2=alt.value(0)
-).encode(
-    color=alt.Color('color:N', scale=None)
-)
-
-# Because y2=alt.value(0) might not work as expected, better to do this:
 zone_bands = alt.Chart(zones).mark_rect(opacity=0.15).encode(
-    x=alt.X('xmin:Q', scale=alt.Scale(domain=[-1,3]), axis=alt.Axis(title="log10(MIC) - Lower is Stronger")),
+    x=alt.X('xmin:Q', scale=alt.Scale(domain=[-1, 3]), axis=alt.Axis(title="log10(MIC) - Lower is Stronger")),
     x2='xmax:Q',
     y=alt.Y('Bacteria:N', sort='-x', title="Bacterial Species"),
     y2=alt.value(0),
@@ -77,9 +63,9 @@ zone_bands = alt.Chart(zones).mark_rect(opacity=0.15).encode(
     height=500
 )
 
-# Now main bars
+# Main bars chart
 bars = alt.Chart(df_long).mark_bar().encode(
-    x=alt.X('log_MIC:Q', scale=alt.Scale(domain=[-1,3]), axis=alt.Axis(title="log10(MIC) - Lower is Stronger")),
+    x=alt.X('log_MIC:Q', scale=alt.Scale(domain=[-1, 3]), axis=alt.Axis(title="log10(MIC) - Lower is Stronger")),
     y=alt.Y('Bacteria:N', sort='-x', title="Bacterial Species"),
     color=alt.Color('Antibiotic:N', legend=alt.Legend(title="Antibiotic")),
     tooltip=["Bacteria", "Antibiotic", "MIC"]
@@ -89,7 +75,7 @@ bars = alt.Chart(df_long).mark_bar().encode(
     title="Antibiotic Effectiveness Across Bacterial Species"
 )
 
-# Combine layers (background zones + bars)
+# Combine background zones + bars
 chart = zone_bands + bars
 
 st.altair_chart(chart, use_container_width=True)

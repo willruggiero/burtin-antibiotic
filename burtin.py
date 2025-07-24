@@ -1,65 +1,56 @@
-# annotated_chart_app.py
+# magazine_style_story.py
 
 import streamlit as st
 import pandas as pd
 import altair as alt
 
-st.set_page_config(page_title="Antibiotic Comparison", layout="wide")
-st.title("💊 Which Antibiotic is Most Effective — And When?")
-st.markdown("This annotated chart compares the MIC (Minimum Inhibitory Concentration) of **Penicillin**, **Streptomycin**, and **Neomycin** across 16 bacterial species. Lower MIC = greater effectiveness.")
+st.set_page_config(page_title="Antibiotic Magazine Story", layout="centered")
+
+st.title("📰 The Antibiotic Dilemma: When One Drug Isn't Enough")
+st.subheader("A Magazine-Style Data Story Exploring Effectiveness of Penicillin, Streptomycin & Neomycin")
+
+st.markdown("""
+In the golden age of antibiotics, one truth remains unchanged: **no single drug works for everything**. Burtin's dataset comparing three antibiotics against 16 bacterial species uncovers this reality with stunning clarity.
+
+Each antibiotic — **Penicillin**, **Streptomycin**, and **Neomycin** — offers a unique pattern of effectiveness. When examined together, we see why doctors often hesitate before prescribing — because bacterial identity and cell wall structure make all the difference.
+""")
 
 # Data
 data = [
-    {"Bacteria": "Aerobacter aerogenes", "Penicillin": 870, "Streptomycin": 1, "Neomycin": 1.6, "Gram": "negative"},
-    {"Bacteria": "Bacillus anthracis", "Penicillin": 0.001, "Streptomycin": 0.01, "Neomycin": 0.007, "Gram": "positive"},
-    {"Bacteria": "Brucella abortus", "Penicillin": 1, "Streptomycin": 2, "Neomycin": 0.02, "Gram": "negative"},
-    {"Bacteria": "Diplococcus pneumoniae", "Penicillin": 0.005, "Streptomycin": 11, "Neomycin": 10, "Gram": "positive"},
-    {"Bacteria": "Escherichia coli", "Penicillin": 100, "Streptomycin": 0.4, "Neomycin": 0.1, "Gram": "negative"},
-    {"Bacteria": "Klebsiella pneumoniae", "Penicillin": 850, "Streptomycin": 1.2, "Neomycin": 1, "Gram": "negative"},
-    {"Bacteria": "Mycobacterium tuberculosis", "Penicillin": 800, "Streptomycin": 5, "Neomycin": 2, "Gram": "negative"},
-    {"Bacteria": "Proteus vulgaris", "Penicillin": 3, "Streptomycin": 0.1, "Neomycin": 0.1, "Gram": "negative"},
-    {"Bacteria": "Pseudomonas aeruginosa", "Penicillin": 850, "Streptomycin": 2, "Neomycin": 0.4, "Gram": "negative"},
-    {"Bacteria": "Salmonella typhosa", "Penicillin": 1, "Streptomycin": 0.4, "Neomycin": 0.008, "Gram": "negative"},
-    {"Bacteria": "Salmonella schottmuelleri", "Penicillin": 10, "Streptomycin": 0.8, "Neomycin": 0.09, "Gram": "negative"},
-    {"Bacteria": "Staphylococcus albus", "Penicillin": 0.007, "Streptomycin": 0.1, "Neomycin": 0.001, "Gram": "positive"},
-    {"Bacteria": "Staphylococcus aureus", "Penicillin": 0.03, "Streptomycin": 0.03, "Neomycin": 0.001, "Gram": "positive"},
-    {"Bacteria": "Streptococcus fecalis", "Penicillin": 1, "Streptomycin": 1, "Neomycin": 0.1, "Gram": "positive"},
-    {"Bacteria": "Streptococcus hemolyticus", "Penicillin": 0.001, "Streptomycin": 14, "Neomycin": 10, "Gram": "positive"},
-    {"Bacteria": "Streptococcus viridans", "Penicillin": 0.005, "Streptomycin": 10, "Neomycin": 40, "Gram": "positive"}
+    {"Bacteria": "Aerobacter aerogenes", "Penicillin": 870, "Streptomycin": 1, "Neomycin": 1.6},
+    {"Bacteria": "Bacillus anthracis", "Penicillin": 0.001, "Streptomycin": 0.01, "Neomycin": 0.007},
+    {"Bacteria": "Escherichia coli", "Penicillin": 100, "Streptomycin": 0.4, "Neomycin": 0.1},
+    {"Bacteria": "Streptococcus hemolyticus", "Penicillin": 0.001, "Streptomycin": 14, "Neomycin": 10},
+    {"Bacteria": "Staphylococcus aureus", "Penicillin": 0.03, "Streptomycin": 0.03, "Neomycin": 0.001},
 ]
 df = pd.DataFrame(data)
-df_long = df.melt(id_vars=["Bacteria", "Gram"], var_name="Antibiotic", value_name="MIC")
+df_long = df.melt(id_vars=["Bacteria"], var_name="Antibiotic", value_name="MIC")
 
-# Main bar chart
-bar = alt.Chart(df_long).mark_bar().encode(
-    y=alt.Y("Bacteria:N", sort="-x", title=None),
-    x=alt.X("MIC:Q", scale=alt.Scale(type='log'), title="MIC (log scale, lower = more effective)"),
-    color=alt.Color("Antibiotic:N", title="Antibiotic"),
-    tooltip=["Bacteria", "Antibiotic", "MIC", "Gram"]
+# Chart
+chart = alt.Chart(df_long).mark_bar(size=40).encode(
+    x=alt.X("MIC:Q", scale=alt.Scale(type='log'), title="MIC (Log Scale)"),
+    y=alt.Y("Bacteria:N", sort="-x"),
+    color=alt.Color("Antibiotic:N"),
+    tooltip=["Bacteria", "Antibiotic", "MIC"]
+).properties(
+    width=700,
+    height=400,
+    title="Antibiotic Strength Varies Widely by Bacterium"
 )
 
-# Annotation labels
-annotated_points = alt.Chart(pd.DataFrame([
-    {"Bacteria": "Bacillus anthracis", "Antibiotic": "Penicillin", "MIC": 0.001, "label": "Highly sensitive"},
-    {"Bacteria": "Aerobacter aerogenes", "Antibiotic": "Penicillin", "MIC": 870, "label": "Highly resistant"},
-])).mark_text(align='left', dx=10, dy=-10, fontSize=12).encode(
-    y="Bacteria:N",
-    x="MIC:Q",
-    text="label:N"
-)
+st.altair_chart(chart, use_container_width=True)
 
-# Combine
-final = (bar + annotated_points).properties(
-    title="Annotated Comparison of Antibiotic Effectiveness (MIC Values)",
-    width=800,
-    height=600
-)
-
-st.altair_chart(final, use_container_width=True)
-
-st.markdown("---")
-st.markdown("📌 **Key Takeaways**")
 st.markdown("""
-- Penicillin is **extremely effective** on some Gram-positive bacteria but fails against most Gram-negative ones.
-- Streptomycin and Neomycin show broader effectiveness, but some bacteria (like *Streptococcus hemolyticus*) remain resistant.
+---
+
+### 🎯 Key Insights:
+
+- Penicillin is incredibly effective against *Bacillus anthracis* and *Staphylococcus aureus* — both Gram-positive.
+- It is virtually useless against *Aerobacter aerogenes* and *E. coli*.
+- Streptomycin and Neomycin offer more reliable performance across species, but even they struggle with some *Streptococcus* strains.
+
+---
+
+In short: treating infections isn't just about using “an antibiotic.” It's about choosing **the right one** — and data like this saves lives by helping us make better decisions.
+
 """)

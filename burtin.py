@@ -53,9 +53,9 @@ zones = pd.DataFrame([
 
 # Background rectangles for zones
 zone_bands = alt.Chart(zones).mark_rect(opacity=0.15).encode(
-    x=alt.X('xmin:Q', scale=alt.Scale(domain=[-1, 3]), axis=alt.Axis(title="log10(MIC) - Lower is Stronger")),
+    x=alt.X('xmin:Q', scale=alt.Scale(domain=[-1, 3]), axis=None),
     x2='xmax:Q',
-    y=alt.Y('Bacteria:N', sort='-x', title="Bacterial Species"),
+    y=alt.Y('Bacteria:N', sort='-x'),
     y2=alt.value(0),
     color=alt.Color('color:N', scale=None, legend=None)
 ).properties(
@@ -63,9 +63,9 @@ zone_bands = alt.Chart(zones).mark_rect(opacity=0.15).encode(
     height=500
 )
 
-# Main bars chart
+# Bars chart without annotations
 bars = alt.Chart(df_long).mark_bar().encode(
-    x=alt.X('log_MIC:Q', scale=alt.Scale(domain=[-1, 3]), axis=alt.Axis(title="log10(MIC) - Lower is Stronger")),
+    x=alt.X('log_MIC:Q', scale=alt.Scale(domain=[-1, 3]), title="log10(MIC) - Lower is Stronger"),
     y=alt.Y('Bacteria:N', sort='-x', title="Bacterial Species"),
     color=alt.Color('Antibiotic:N', legend=alt.Legend(title="Antibiotic")),
     tooltip=["Bacteria", "Antibiotic", "MIC"]
@@ -75,12 +75,10 @@ bars = alt.Chart(df_long).mark_bar().encode(
     title="Antibiotic Effectiveness Across Bacterial Species"
 )
 
-# Combine background zones + bars
 chart = zone_bands + bars
 
 st.altair_chart(chart, use_container_width=True)
 
-# Final note
 st.markdown("""
 This chart reveals key insights:
 - **Penicillin** is ineffective against some bacteria like *Aerobacter aerogenes* (MIC = 870).
